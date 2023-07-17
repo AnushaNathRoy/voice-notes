@@ -8,14 +8,6 @@
 - **Front-end:** [React-Native](https://reactnative.dev/)
 - **Build:** [Expo](https://expo.dev/)
 
-## Download from Play Store
-
-[Click Here](https://play.google.com/store/apps/details?id=com.iamdevmarcos.mynotes)
-
-## Download the APK
-
-Coming Soon
-
 ## Running locally
 
 1. Clone this repo:
@@ -27,7 +19,7 @@ $ git clone https://github.com/iamdevmarcos/myNotes.git
 2. Then go to the project's folder:
 
 ```sh
-cd myNotes
+cd voice-notes
 ```
 
 3. Install all dependencies:
