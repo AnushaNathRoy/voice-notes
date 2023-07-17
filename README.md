@@ -1,13 +1,7 @@
-# MyNotes
+# VoiceNotes
 
 
 ## About this Project
-
-The idea of the App is:
-
-_"Make your day easier, make your life easier. Organize your notes and tasks"._
-
-Be sure to send your feedback.
 
 ## Technology stack
 
