@@ -1,10 +1,5 @@
 # MyNotes
 
-<p align="center">
-  <a href="https://play.google.com/store/apps/details?id=com.iamdevmarcos.mynotes">
-    <img src="./assets/Project.png" width="550">
-  </a>
-</p>
 
 ## About this Project
 
@@ -52,17 +47,3 @@ npm install
 ```sh
 npm start
 ```
-
-## Contributing
-
-Email-me: marcosdev.me@gmail.com
-
-Connect with me on [LinkedIn](https://www.linkedin.com/in/iamdevmarcos/)
-Visit my website [marcosdev.me](https://marcosdev.me/)
-
-Thanks!
-
-## Autor
-
-| [<img src="https://avatars.githubusercontent.com/u/92524722?v=4" width=115><br><sub>@iamdevmarcos</sub>](https://github.com/iamdevmarcos) |
-| :---------------------------------------------------------------------------------------------------------------------------------------: |
