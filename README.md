@@ -13,7 +13,7 @@
 1. Clone this repo:
 
 ```sh
-$ git clone https://github.com/iamdevmarcos/myNotes.git
+$ git clone https://github.com/AnushaNathRoy/voice-notes.git
 ```
 
 2. Then go to the project's folder:
