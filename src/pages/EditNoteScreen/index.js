@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { FontAwesome } from '@expo/vector-icons';
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { Alert } from "react-native";
+import { Alert,Text,Button,View,TouchableOpacity } from "react-native";
 import {
   Container,
   TitleInput,
@@ -10,6 +11,10 @@ import {
   SaveButtonImage,
   CloseButton,
   CloseButtonImage,
+  Box,
+  container,
+  button1,
+  recordingStatusText,
   ButtonsContainer,
   DeleteButton,
   DeleteButtonText,
@@ -18,18 +23,21 @@ import {
   NoSuccessButton,
   NoSuccessButtonText,
 } from "./styles";
-
+import ASR from "../ASR"; 
 export default () => {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
   const list = useSelector((state) => state.notes.list);
-
+  
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [done, setDone] = useState(false);
   const [status, setStatus] = useState("new");
-
+  const asr= new ASR();
+  // const recordAudio= async()=>{
+  //   await asr.recordAudio();
+  // };
   useEffect(() => {
     if (route.params?.key !== undefined && list[route.params.key]) {
       setStatus("edit");
@@ -39,6 +47,7 @@ export default () => {
     }
   }, []);
 
+  
   useLayoutEffect(() => {
     navigation.setOptions({
       title: status === "new" ? "Add New" : "Edit Notes",
@@ -61,6 +70,8 @@ export default () => {
     });
   }, [status, title, body]);
 
+  
+  
   const setBodyRichText = (text) => {
     // Check for formatting patterns like notion /h1 /b /i /s /c /quote /code /link /divider /numbered list /bulleted list /toggle list
     const boldRegex = /\*([^\*]+)\*/g;
@@ -131,9 +142,12 @@ export default () => {
       { cancelable: false }
     );
   };
-  
+  const handleRecordButtonPress = async () => {
+      await ASR.handleRecordButtonPress();
+    
+  };
  
-
+  
 
   return (
     <Container>
@@ -156,11 +170,12 @@ export default () => {
         style={{ fontFamily: "WorkSans-Regular" }}
       />
 
+    
       {status === "edit" && (
         <ButtonsContainer>
           <DeleteButton underlayColor="#FF0000">
             <DeleteButtonText style={{ fontFamily: "WorkSans-Regular" }}>
-              Record Audio
+             Audio
             </DeleteButtonText>
           </DeleteButton>
         </ButtonsContainer>

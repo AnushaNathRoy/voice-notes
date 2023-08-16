@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect } from "react";
 import { BackHandler } from "react-native";
+import { View, TouchableOpacity, Text,Image } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import LottieView from "lottie-react-native";
@@ -31,12 +32,30 @@ export default () => {
       title: "Your Notes",
       headerLeft: false,
       headerRight: () => (
-        <AddButton
-          underlayColor="transparent"
+        <View style={{ flexDirection: "row", marginRight: 20 }}>
+        <TouchableOpacity
+          style={{ marginRight: 10 }}
           onPress={() => navigation.navigate("EditNote")}
         >
-          <AddButtonImage source={require("../../assets/more.png")} />
-        </AddButton>
+          <Image source={require("../../assets/more.png")}
+style={{width:24,height:24}} 
+           />
+          {/* <Text style={{ color: "blue" }}>Edit Note</Text> */}
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ASR")} 
+        >
+          <Text style={{ color: "blue", fontSize:20,fontWeight:"bold" }}>ASR</Text>
+        </TouchableOpacity>
+      </View>
+
+
+        // <AddButton
+        //   underlayColor="transparent"
+        //   onPress={() => navigation.navigate("EditNote")}
+        // >
+        //   <AddButtonImage source={require("../../assets/more.png")} />
+        // </AddButton>
       ),
     });
   }, []);
