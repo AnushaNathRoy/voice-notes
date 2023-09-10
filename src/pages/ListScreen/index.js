@@ -1,5 +1,5 @@
-import React, { useEffect, useLayoutEffect } from "react";
-import { BackHandler } from "react-native";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { BackHandler, TextInput } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import LottieView from "lottie-react-native";
@@ -14,6 +14,7 @@ import {
   NoNotes,
   NoNotesImage,
   NoNotesText,
+  SearchBar,  
 } from "./styles";
 
 import NoteItem from "../../components/NoteItem";
@@ -22,6 +23,8 @@ export default () => {
   const navigation = useNavigation();
   const list = useSelector((state) => state.notes.list);
 
+  const [searchText, setSearchText] = useState('');
+  const filteredNotes = list.filter(note => note.title.includes(searchText));
   useEffect(() => {
     BackHandler.addEventListener("hardwareBackPress", () => true);
   }, []);
@@ -41,10 +44,11 @@ export default () => {
     });
   }, []);
 
-  const handleNotePress = (index) => {
-    navigation.navigate("EditNote", {
-      key: index,
-    });
+  const handleNotePress = (noteItem) => {
+      const noteIndex = list.findIndex(note => note === noteItem);
+      navigation.navigate("EditNote", {
+        key: noteIndex,
+      });
   };
 
   let [fontsLoaded, error] = useFonts({
@@ -58,16 +62,25 @@ export default () => {
 
   return (
     <Container>
-      {list.length > 0 && (
-        <NotesList
-          data={list}
-          renderItem={({ item, index }) => (
-            <NoteItem data={item} index={index} onPress={handleNotePress} />
-          )}
-          keyExtractor={(item, index) => index.toString()}
+      <SearchBar>
+        <TextInput
+          style={{ flex: 1 }}
+          placeholder="Search notes..."
+          value={searchText}
+          onChangeText={setSearchText}
         />
+      </SearchBar>
+      {filteredNotes.length > 0 && (
+      <NotesList
+        data={filteredNotes}
+        renderItem={({ item }) => (
+            <NoteItem data={item} onPress={() => handleNotePress(item)} />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+      />
+
       )}
-      {list.length === 0 && (
+      {filteredNotes.length === 0 && (
         <NoNotes>
           <NoNotesText style={{ fontFamily: "WorkSans-SemiBold" }}>
             add new notes by clicking + button 

@@ -36,3 +36,11 @@ export const NoNotesText = styled.Text`
   font-size: 20px;
   color: #000;
 `;
+
+export const SearchBar = styled.View`
+  flex-direction: row;
+  padding: 10px;
+  background-color: #f2f2f2;
+  margin: 10px;
+  border-radius: 8px;
+`;
