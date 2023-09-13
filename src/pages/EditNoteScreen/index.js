@@ -1,170 +1,407 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { Alert } from "react-native";
-import {
-  Container,
-  TitleInput,
-  BodyInput,
-  SaveButton,
-  SaveButtonImage,
-  CloseButton,
-  CloseButtonImage,
-  ButtonsContainer,
-  DeleteButton,
-  DeleteButtonText,
-  SuccessButton,
-  SuccessButtonText,
-  NoSuccessButton,
-  NoSuccessButtonText,
-} from "./styles";
+import { Text, View, TextInput, Button, Keyboard,ScrollView } from "react-native";
+import SelectDropdown from 'react-native-select-dropdown';
+import { CloseButton, SaveButton, TitleInput } from "./styles";
+import { useLayoutEffect } from "react";
+import { CloseButtonImage, SaveButtonImage } from "./styles";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
+import { FontAwesome } from '@expo/vector-icons';
+import { AndroidAudioEncoder, AndroidOutputFormat } from 'expo-av/build/Audio';
+
 
 export default () => {
   const navigation = useNavigation();
   const route = useRoute();
   const dispatch = useDispatch();
   const list = useSelector((state) => state.notes.list);
-
+  const [blocks, setBlocks] =  useState([]);
   const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [done, setDone] = useState(false);
-  const [status, setStatus] = useState("new");
+
+  const [recording, setRecording] = useState(null);
+  const [recordingStatus, setRecordingStatus] = useState('idle');
+  const [audioPermission, setAudioPermission] = useState(null);
+  const [transcript, setTranscript] = useState([]);
 
   useEffect(() => {
+    // console.log("Route params: ", route.params);
+    // console.log("List: ", list);
+    // console.log("Key: ", route.params?.key);    
+    // console.log("List key: ", list[route.params.key]);
     if (route.params?.key !== undefined && list[route.params.key]) {
-      setStatus("edit");
+        // console.log("Blocks updated: ", list[route.params.key].blocks);
+        // console.log("Title updated: ", list[route.params.key].title);
+        // console.log("Key updated: ", list[route.params.key]);
       setTitle(list[route.params.key].title);
-      setBody(list[route.params.key].body);
-      setDone(list[route.params.key].done);
+      setBlocks(list[route.params.key].blocks || []);
     }
+
+    // Simply get recording permission upon first render
+    async function getPermission() {
+        await Audio.requestPermissionsAsync().then((permission) => {
+          console.log('Permission Granted: ' + permission.granted);
+          setAudioPermission(permission.granted)
+        }).catch(error => {
+          console.log(error);
+        });
+      }
+  
+      // Call function to get permission
+      getPermission()
+      // Cleanup upon first render
+      return () => {
+        if (recording) {
+          stopRecording();
+        }
+      };
+
   }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: status === "new" ? "Add New" : "Edit Notes",
-      headerLeft: () => (
-        <CloseButton underlayColor="transparent" onPress={handleCloseButton}>
-          <CloseButtonImage source={require("../../assets/close.png")} />
-        </CloseButton>
-      ),
-      headerRight: () => (
-        <Container>
-          <SaveButton underlayColor="transparent" onPress={handleSaveButton}>
-            <SaveButtonImage source={require("../../assets/save.png")} />
-          </SaveButton>
-
-          <SaveButton underlayColor="transparent" onPress={handleDeleteNote}>
-            <SaveButtonImage source={require("../../assets/del.png")} />
-          </SaveButton>
-        </Container>
-      ),
+        title: "Edit Notes",
+        headerLeft: () => (
+            <CloseButton underlayColor="transparent" onPress={handleCloseButton}>
+                <CloseButtonImage source={require("../../assets/close.png")} />
+            </CloseButton>
+        ),
+        headerRight: () => (
+            <Button onPress={Keyboard.isVisible? Keyboard.dismiss : null} title="Done" />
+        ),
     });
-  }, [status, title, body]);
+    }, []);
 
-  const setBodyRichText = (text) => {
-    // Check for formatting patterns like notion /h1 /b /i /s /c /quote /code /link /divider /numbered list /bulleted list /toggle list
-    const boldRegex = /\*([^\*]+)\*/g;
-    const italicRegex = /_([^_]+)_/g;
-    const strikeRegex = /~([^~]+)~/g;
-    const codeRegex = /`([^`]+)`/g;
+    async function startRecording() {
+        try {
+          // needed for IoS
+          if (audioPermission) {
+            await Audio.setAudioModeAsync({
+              allowsRecordingIOS: true,
+              playsInSilentModeIOS: true
+            })
+          }
+    
+          const newRecording = new Audio.Recording();
+          console.log('Starting Recording')
+          await newRecording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY={
+            android: {
+                             extension: '.wav',
+                             outputFormat: AndroidOutputFormat.DEFAULT,
+                             audioEncoder: AndroidAudioEncoder.AAC,
+                             sampleRate: 44100,
+                             numberOfChannels: 2,
+                             bitRate: 128000,
+                         },
+                         ios: {
+                             extension: '.wav',
+                             audioQuality: AndroidOutputFormat.DEFAULT,
+                             sampleRate: 44100,
+                             numberOfChannels: 2,
+                             bitRate: 128000,
+                             linearPCMBitDepth: 16,
+                             linearPCMIsBigEndian: false,
+                             linearPCMIsFloat: false,
+                         },
+          });
+          await newRecording.startAsync();
+          setRecording(newRecording);
+          setRecordingStatus('recording');
+    
+        } catch (error) {
+          console.error('Failed to start recording', error);
+        }
+      }
+      const getTranscript = async (audioFileUri) => {
+        const apiUrl = 'https://asr.iiit.ac.in/ssmtapi/';
+        const formData = new FormData();
+        formData.append('uploaded_file', {
+          uri: audioFileUri,
+          name: 'test.wav',
+          type: 'audio/wav'
+        });
+        formData.append('lang', 'eng');
+      
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+          body: formData
+        });
+      
+        const data = await response.json();
+        const trans= data["transcript"][0]["transcript"]
+        console.log(trans);
+        //return trans;
+        return data.transcript;
+      };
+      async function stopRecording(index) {
+        try {
+    
+          if (recordingStatus === 'recording') {
+            console.log('Stopping Recording')
+            updateBlockContent(index, "Processing....")
+            await recording.stopAndUnloadAsync();
+            const recordingUri = recording.getURI();
+            const transcript = await getTranscript(recordingUri);
+            setTranscript(transcript);
+            updateBlockContent(index, transcript[0]["transcript"]);
+            console.log('Recording', recordingUri);
+            const extension= recordingUri.split(".").pop();
+            console.log('Extension', extension);
+            // Create a file name for the recording
+            const fileName = `recording-${Date.now()}.wav`;
+            console.log('File Name', fileName);
+    
+            // Move the recording to the new directory with the new file name
+            await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'recordings/', { intermediates: true });
+            await FileSystem.moveAsync({
+              from: recordingUri,
+              to: FileSystem.documentDirectory + 'recordings/' + `${fileName}`
+            });
+    
+            // This is for simply playing the sound back
+            const playbackObject = new Audio.Sound();
+            await playbackObject.loadAsync({ uri: FileSystem.documentDirectory + 'recordings/' + `${fileName}` });
+            await playbackObject.playAsync();
+    
+            // resert our states to record again
+            setRecording(null);
+            setRecordingStatus('stopped');
+            return transcript;
+          }
+    
+        } catch (error) {
+          console.error('Failed to stop recording', error);
+          return null;
+        }
+      }
+    
+      async function handleRecordButtonPress(index) {
+        if (recording) {
+          const audioUri = await stopRecording(index);
+          
+        //   if (audioUri) {
+        //     console.log('Saved audio file to', savedUri);
+      
+        //   }
+        } else {
+          await startRecording();
+          updateBlockContent(index, "Recording....")
+        }
+      }
+    
+    const handleCloseButton = () => {
+        if(recording){
+            stopRecording();
+        }
+        navigation.goBack();
+    };
 
-    // Replace with formatting components
-    const formattedText = text
-      .replace(boldRegex, "<b>$1</b>")
-      .replace(italicRegex, "<i>$1</i>")
-      .replace(strikeRegex, "<s>$1</s>")
-      .replace(codeRegex, "<code>$1</code>");
-
-    setBody(formattedText);
+  const updateBlockType = (id, newType) => {
+    // Implement this function to update block type
+    blocks[id].type = newType;
+    setBlocks([...blocks]);
   };
 
-  const handleSaveButton = () => {
-    if (title !== "" && body !== "") {
-      if (status === "edit") {
+  const updateBlockContent = (id, newContent) => {
+    // Implement this function to update block content
+    console.log("Updating block content...");
+    console.log(blocks);
+    console.log(id);
+    console.log(newContent);
+
+    blocks[id].content = newContent;
+    setBlocks([...blocks]);
+
+  };
+
+  const removeBlock = (id) => {
+    blocks.splice(id, 1);
+    setBlocks([...blocks]);
+
+  };
+
+  const handleRecordNew = () => {
+    console.log("Recording new block...");
+    setBlocks([
+        ...blocks,
+        {
+            id: blocks.length,
+            type: "paragraph",
+            content: "Recording...",
+        },
+    ]);
+    handleRecordButtonPress(blocks.length);
+    };
+
+  const handleAddBlock = () => {
+    setBlocks([
+      ...blocks,
+      {
+        id: blocks.length,
+        type: "paragraph",
+        content: "",
+      },
+    ]);
+
+  };
+
+  const handleSave = () => {
+    console.log("Saving note...");
+    console.log("Blocks: ", blocks);
+    console.log("Title: ", title);
+    if (title !== "" && blocks.length > 0) {
+        
+
+      if (route.params?.key !== undefined && list[route.params.key]) {
+        // Dispatch the editNote action
         dispatch({
-          type: "EDIT_NOTE",
-          payload: {
-            key: route.params.key,
-            title,
-            body,
-            done,
-          },
+            type: "EDIT_NOTE",
+            payload: {
+                key: route.params.key,
+                title,
+                blocks,
+            },
         });
+
       } else {
+        // Dispatch the addNote action
         dispatch({
-          type: "ADD_NOTE",
-          payload: { title, body },
+            type: "ADD_NOTE",
+            payload: {
+                title,
+                blocks,
+            },
         });
       }
-
-      navigation.navigate("List");
-    } else {
-      alert("Sorry :( \n\nTitle and body are required!");
+      navigation.goBack();
     }
   };
-
-  const handleCloseButton = () => navigation.navigate("List");
-
-  const handleDeleteNote = () => {
-    Alert.alert(
-      "Confirmation",
-      "Are you sure you want to delete?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            dispatch({
-              type: "DELETE_NOTE",
-              payload: {
-                key: route.params.key,
-              },
-            });
-            navigation.navigate("List");
-          },
-        },
-      ],
-      { cancelable: false }
-    );
-  };
-  
- 
-
-
   return (
-    <Container>
+    <ScrollView>
+    <View>
       <TitleInput
-        value={title}
-        onChangeText={(t) => setTitle(t)}
         placeholder="Title | ex: Lecture Notes 📚"
         placeholderTextColor="#ccc"
-        autoFocus={true}
         style={{ fontFamily: "WorkSans-SemiBold" }}
+        value={title}
+        onChangeText={(t) => setTitle(t)}
+        autoFocus={true}
       />
 
-      <BodyInput
-        value={body}
-        onChangeText={(t) => setBodyRichText(t)}
-        placeholder="Note | ex: Today I learned ...."
-        placeholderTextColor="#ccc"
-        multiline={true}
-        textAlignVertical="top"
-        style={{ fontFamily: "WorkSans-Regular" }}
-      />
+      {blocks.map((block, index) => (
 
-      {status === "edit" && (
-        <ButtonsContainer>
-          <DeleteButton underlayColor="#FF0000">
-            <DeleteButtonText style={{ fontFamily: "WorkSans-Regular" }}>
-              Record Audio
-            </DeleteButtonText>
-          </DeleteButton>
-        </ButtonsContainer>
-      )}
-    </Container>
+        
+        <View key={index} style={{ marginBottom: 10 , borderStyle: 'solid', borderWidth: 1, borderColor: 'black', padding: 10, margin: 5}}>
+          
+          
+          {block.type === "heading" ? (
+            <TextInput
+              style={{ fontWeight: "bold", fontSize: 18 }}
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type the content of your block"
+            >
+              {block.content}
+            </TextInput>
+          ) : block.type === "list" ? (
+            <View>
+              {block.content.split('\n').map((item, itemIndex) => (
+                <View key={itemIndex} style={{ flexDirection: "row" }}>
+                  <Text style={{ marginRight: 10 }}>•</Text>
+                  <TextInput
+                    onChangeText={(t) => {
+                        const newContent = block.content.split('\n');
+                        newContent[itemIndex] = t;
+                        updateBlockContent(index, newContent.join('\n'));
+                    }}
+                    placeholder="Enter list item"
+                    placeholderTextColor="#CCC"
+                    multiline={true}
+                    value={item}
+                  />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View>
+              <TextInput
+                placeholder="Type the content of your block"
+                placeholderTextColor="#CCC"
+                value={block.content}
+                onChangeText={(t) => updateBlockContent(index, t)}
+                autoFocus={true}
+                multiline={true}
+              />
+            </View>
+          )}
+
+        {/* Add a "Record Audio" button */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
+          <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center'}}>
+            {/* make left 6 parts */}
+          <SelectDropdown
+            data={['paragraph', 'heading', 'list']}
+            onSelect={(selectedItem) => {
+              updateBlockType(index, selectedItem);
+            }}
+            defaultButtonText={block.type}
+            buttonStyle={{ backgroundColor: 'transparent' , justifyContent: 'center', padding: 0, margin: 0}}
+            buttonTextStyle={{ color: 'blue', fontSize: 15, justifyContent: 'center', padding: 0, margin: 0}}
+            dropdownStyle={{ backgroundColor: 'transparent' }}
+            rowStyle={{ backgroundColor: '#ccc', justifyContent: 'center'}}
+            rowTextStyle={{ color: '#000' , fontSize: 11, justifyContent: 'center'}}
+          />
+          </View>
+          
+          <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center'}}>
+            <TouchableOpacity
+                onPress={() => {
+                    // Handle audio recording for the current block here
+                    console.log("Recording audio...");
+                    handleRecordButtonPress(index);
+                    
+                }}
+            >
+
+                {/* make style same as  */}
+                <Text style={{ color: "blue" }}> {recording? 'stop' : 'record'}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center'}}>
+            <TouchableOpacity
+                onPress={() => {
+                    removeBlock(index);
+                }}
+            >
+
+                {/* make style same as  */}
+                <Text style={{ color: "blue" }}> delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        </View>
+        ))}
+
+      <View style={{ height: 100 , flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', margin: 10}}>
+      <Button title="Add" onPress={handleAddBlock} />
+      {/* record new block */}
+      <Button title="Record" onPress={handleRecordNew} />
+      <Button title="Save" onPress={handleSave} />
+      </View>
+
+    </View>
+    </ScrollView>
   );
 };
+
+styles = {
+    
+
+}
+

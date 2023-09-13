@@ -29,29 +29,32 @@ export default ({ data, index, onPress }) => {
 
   const handleUnCheckNote = () => {
     Alert.alert(
-      'Confirmation',
-      'Are you sure you want to delete?',
+      "Delete Note",
+      "Are you sure you want to delete this note?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
         },
+
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "OK",
           onPress: () => {
             dispatch({
-              type: 'DELETE_NOTE',
+              type: "DELETE_NOTE",
               payload: {
                 key: index,
               },
             });
+            console.log("Delete Pressed");
+            console.log(index);
           },
         },
       ],
       { cancelable: false }
     );
-  };
+  }
 
   return (
     <Box

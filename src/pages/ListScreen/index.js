@@ -31,7 +31,7 @@ export default () => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Your Notes",
+      title: "My Notes",
       headerLeft: false,
       headerRight: () => (
         <AddButton
@@ -65,7 +65,8 @@ export default () => {
       <SearchBar>
         <TextInput
           style={{ flex: 1 }}
-          placeholder="Search notes..."
+          placeholder="Search Notes...🔍"
+          placeholderTextColor={"#000"}
           value={searchText}
           onChangeText={setSearchText}
         />
@@ -74,7 +75,8 @@ export default () => {
       <NotesList
         data={filteredNotes}
         renderItem={({ item }) => (
-            <NoteItem data={item} onPress={() => handleNotePress(item)} />
+            console.log(item),
+            <NoteItem data={item} onPress={() => handleNotePress(item)} index={noteIndex = list.findIndex(note => note === item)} />
         )}
         keyExtractor={(item, index) => index.toString()}
       />
