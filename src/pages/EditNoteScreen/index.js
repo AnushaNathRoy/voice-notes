@@ -328,7 +328,127 @@ export default () => {
                 </View>
               ))}
             </View>
-          ) : (
+          ) : block.type === "heading2" ? (
+            <TextInput
+                style={{ fontWeight: "bold", fontSize: 16 }} // Smaller font for heading 2
+                onChangeText={(t) => updateBlockContent(index, t)}
+                multiline={true}
+                placeholder="Type the content of your block"
+                value={block.content}
+            />
+        ) : block.type === "heading3" ? (
+          <TextInput
+              style={{ fontWeight: "bold", fontSize: 14 }} 
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type the content of your block"
+              value={block.content}
+          />
+      ) : block.type === "heading4" ? (
+          <TextInput
+              style={{ fontWeight: "bold", fontSize: 13 }} 
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type the content of your block"
+              value={block.content}
+          />
+      ) : block.type === "heading5" ? (
+          <TextInput
+              style={{ fontWeight: "bold", fontSize: 12 }} 
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type the content of your block"
+              value={block.content}
+          />
+      ) : block.type === "heading6" ? (
+          <TextInput
+              style={{ fontWeight: "bold", fontSize: 11 }} 
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type the content of your block"
+              value={block.content}
+          />
+      ) : block.type === "quote" ? (
+            <TextInput
+                style={{ fontStyle: "italic", fontSize: 15, borderLeftWidth: 2, paddingLeft: 10 }} // Styling for quotes
+                onChangeText={(t) => updateBlockContent(index, t)}
+                multiline={true}
+                placeholder="Type a quote"
+                value={block.content}
+            />
+        ) : block.type === "underline" ? (
+          <TextInput
+              style={{ textDecorationLine: "underline", fontSize: 15 }}
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type underlined content"
+              value={block.content}
+          />
+      ) : block.type === "list" ? (
+            <View>
+                {block.content.split('\n').map((item, itemIndex) => (
+                    <View key={itemIndex} style={{ flexDirection: "row" }}>
+                        <Text style={{ marginRight: 10 }}>•</Text>
+                        <TextInput
+                            onChangeText={(t) => {
+                                const newContent = block.content.split('\n');
+                                newContent[itemIndex] = t;
+                                updateBlockContent(index, newContent.join('\n'));
+                            }}
+                            placeholder="Enter list item"
+                            placeholderTextColor="#CCC"
+                            multiline={true}
+                            value={item}
+                        />
+                    </View>
+                ))}
+            </View>
+        ) : block.type === "bold" ? (
+          <TextInput
+              style={{ fontWeight: "bold", fontSize: 15 }}
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Type bold content"
+              value={block.content}
+          />
+      ) : block.type === "strikethrough" ? (
+          <TextInput
+              style={{ textDecorationLine: "line-through", fontSize: 15 }}
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Strikethrough content"
+              value={block.content}
+          />
+      ) : block.type === "highlight" ? (
+          <TextInput
+              style={{ backgroundColor: "yellow", fontSize: 15 }}
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Highlighted content"
+              value={block.content}
+          />
+      ) : block.type === "code" ? (
+          <TextInput
+          style={{ 
+            fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', 
+            fontSize: 15, 
+            backgroundColor: "#e0e0e0", 
+            padding: 5 
+        }}
+        onChangeText={(t) => updateBlockContent(index, t)}
+        multiline={true}
+        placeholder="Input code"
+        value={block.content}
+          />
+      ) : block.type === "link" ? (
+          <TextInput
+              style={{ textDecorationLine: "underline", color: "blue", fontSize: 15 }}
+              onChangeText={(t) => updateBlockContent(index, t)}
+              multiline={true}
+              placeholder="Enter hyperlink"
+              value={block.content}
+          />
+      ) : (
             <View>
               <TextInput
                 placeholder="Type the content of your block"
@@ -346,7 +466,7 @@ export default () => {
           <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center'}}>
             {/* make left 6 parts */}
           <SelectDropdown
-            data={['paragraph', 'heading', 'list']}
+            data={['paragraph', 'heading', 'heading2', 'heading3', 'heading4', 'heading5', 'heading6', 'list', 'quote', 'underline', 'bold', 'strikethrough', 'highlight', 'code', 'link']}
             onSelect={(selectedItem) => {
               updateBlockType(index, selectedItem);
             }}
