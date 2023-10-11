@@ -441,13 +441,22 @@ export default () => {
         value={block.content}
           />
       ) : block.type === "link" ? (
-          <TextInput
-              style={{ textDecorationLine: "underline", color: "blue", fontSize: 15 }}
-              onChangeText={(t) => updateBlockContent(index, t)}
-              multiline={true}
-              placeholder="Enter hyperlink"
-              value={block.content}
-          />
+        <View>
+        <TextInput
+            style={{ fontSize: 15 }}
+            onChangeText={(t) => updateBlockContent(index, { ...block.content, displayText: t })}
+            multiline={false}
+            placeholder="Display Text"
+            value={block.content.displayText}
+        />
+        <TextInput
+            style={{ textDecorationLine: "underline", color: "blue", fontSize: 15 }}
+            onChangeText={(t) => updateBlockContent(index, { ...block.content, url: t })}
+            multiline={false}
+            placeholder="Enter hyperlink"
+            value={block.content.url}
+        />
+    </View>
       ) : (
             <View>
               <TextInput
