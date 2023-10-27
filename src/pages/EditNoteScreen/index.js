@@ -62,7 +62,7 @@ export default () => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-        title: "Edit Notes",
+        title: "Edit Note",
         headerLeft: () => (
             <CloseButton underlayColor="transparent" onPress={handleCloseButton}>
                 <CloseButtonImage source={require("../../assets/close.png")} />
@@ -135,7 +135,7 @@ export default () => {
       
         const data = await response.json();
         const trans= data["transcript"][0]["transcript"]
-        console.log(trans);
+        console.log(data);
         //return trans;
         return data.transcript;
       };
