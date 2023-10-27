@@ -140,6 +140,7 @@ export default () => {
     return data.transcript;
   };
   async function stopRecording(index, mode = null) {
+    console.log("OLA1");
     try {
       if (recordingStatus === 'recording') {
         console.log('Stopping Recording')
@@ -148,11 +149,17 @@ export default () => {
         const recordingUri = recording.getURI();
         const transcript = await getTranscript(recordingUri);
         setTranscript(transcript);
+        console.log("transcriptA2", transcript);
+       
+        
         if (mode) {
           updateBlockContent(index, transcript[0]["transcript"]);
         }
         else {
+          console.log("OLA2");
+          console.log("transcriptA1", transcript);
           total_transcript = transcript.map((item) => item["transcript"]).join(" ");
+          console.log("total_transcriptA1", total_transcript);
           words = total_transcript.split(" ");
           curr_sent = "";
           curr_type = "paragraph";
@@ -167,7 +174,7 @@ export default () => {
               });
               curr_sent = "";
               curr_type = words[i + 1];
-              print("curr_type", curr_type);
+              console.log("curr_type", curr_type);
               i++;
               continue;
             }
@@ -182,31 +189,29 @@ export default () => {
               });
             }
           }
-
-          setBlocks([
-            ...blocks[0, index - 1],
-            ...new_blocks,
-          ]);
+          console.log("new_blocks", new_blocks);
+          removeBlock(blocks.length - 1);
+          setBlocks([...blocks, ...new_blocks]);
         }
 
-        console.log('Recording', recordingUri);
-        const extension = recordingUri.split(".").pop();
-        console.log('Extension', extension);
-        // Create a file name for the recording
-        const fileName = `recording-${Date.now()}.wav`;
-        console.log('File Name', fileName);
+        // console.log('Recording', recordingUri);
+        // const extension = recordingUri.split(".").pop();
+        // console.log('Extension', extension);
+        // // Create a file name for the recording
+        // const fileName = `recording-${Date.now()}.wav`;
+        // console.log('File Name', fileName);
 
         // Move the recording to the new directory with the new file name
-        await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'recordings/', { intermediates: true });
-        await FileSystem.moveAsync({
-          from: recordingUri,
-          to: FileSystem.documentDirectory + 'recordings/' + `${fileName}`
-        });
+        // await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'recordings/', { intermediates: true });
+        // await FileSystem.moveAsync({
+        //   from: recordingUri,
+        //   to: FileSystem.documentDirectory + 'recordings/' + `${fileName}`
+        // });
 
-        // This is for simply playing the sound back
-        const playbackObject = new Audio.Sound();
-        await playbackObject.loadAsync({ uri: FileSystem.documentDirectory + 'recordings/' + `${fileName}` });
-        await playbackObject.playAsync();
+        // // This is for simply playing the sound back
+        // const playbackObject = new Audio.Sound();
+        // await playbackObject.loadAsync({ uri: FileSystem.documentDirectory + 'recordings/' + `${fileName}` });
+        // await playbackObject.playAsync();
 
         // resert our states to record again
         setRecording(null);
@@ -222,8 +227,8 @@ export default () => {
 
   async function handleRecordButtonPress(index, mode = null) {
     if (recording) {
-      const audioUri = await stopRecording(index, mode);
-      console.log(audioUri);
+      await stopRecording(index, mode);
+      
     } else {
       await startRecording();
       updateBlockContent(index, "Recording....")
