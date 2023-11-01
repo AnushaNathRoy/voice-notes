@@ -23,20 +23,20 @@ $ git clone https://github.com/AnushaNathRoy/voice-notes.git
 ```
 
 
-3. **Navigate to the Project Directory:**  
+2. **Navigate to the Project Directory:**  
 Once cloned, navigate to the project's root directory using:
 ```
 cd voice-notes
 ```
 
 
-5. **Install Dependencies:**  
+3. **Install Dependencies:**  
 Install all the necessary dependencies for the project with:
 ```
 npm install
 ```
 
-7. **Run the Application Locally:**  
+4. **Run the Application Locally:**  
 After installing the dependencies, you can run the application locally using:
 ```
 npm start
